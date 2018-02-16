@@ -16,6 +16,13 @@ class MyRobot(wpilib.IterativeRobot):
         """
         self.Sol = wpilib.Solenoid(5,0)
 
+        # Include limit switches for the elevator and shoulder mechanisms
+        # 2018-2-16 Warning! The Switch's channel should be modified according to the robot!
+        self.SW1 = wpilib.DigitalInput(1)
+        self.SW2 = wpilib.DigitalInput(1)
+        self.SW3 = wpilib.DigitalInput(1)
+        self.SW4 = wpilib.DigitalInput(1)
+
         # Left Motor Group Setup
         self.M0 = ctre.wpi_talonsrx.WPI_TalonSRX(4)
         self.M1 = ctre.wpi_talonsrx.WPI_TalonSRX(3)
@@ -27,13 +34,18 @@ class MyRobot(wpilib.IterativeRobot):
         self.M2 = ctre.wpi_talonsrx.WPI_TalonSRX(2)
         self.M3 = ctre.wpi_talonsrx.WPI_TalonSRX(1)
         self.right = wpilib.SpeedControllerGroup(self.M2,self.M3)
+
+        # Drive setup
         self.drive = wpilib.drive.DifferentialDrive(self.left, self.right)
 
         # Misc Setting
         self.stick = wpilib.Joystick(0)
         self.timer = wpilib.Timer()
+
+        # E = Elevator
         self.E1 = wpilib.VictorSP(0)
         self.E2 = wpilib.VictorSP(1)
+        # Shoulder
         self.S1 = wpilib.VictorSP(2)
         self.S2 = wpilib.VictorSP(3)
 
@@ -53,17 +65,23 @@ class MyRobot(wpilib.IterativeRobot):
 
     def teleopPeriodic(self):
         """This function is called periodically during operator control."""
+
+        # Drive setting
         self.drive.arcadeDrive(-1*self.stick.getRawAxis(0), self.stick.getRawAxis(1))
 
-        if self.stick.getRawButton(1) == True:
+        # Elevator
+        # 2018-2-16 Warning! The Switch number should be modified accroding to the robot!
+        if self.stick.getRawButton(1) == True & self.SW1 == False & self.SW2 == False:
             self.E1.set(0.8)
             self.E2.set(-0.8)
-        elif self.stick.getRawButton(2) == True:
+        elif self.stick.getRawButton(2) == True & self.SW3 == False & self.SW4 == False:
             self.E1.set(-0.8)
             self.E2.set(0.8)
         else:
             self.E1.set(0)
             self.E2.set(0)
+
+        # Shoulder
         if self.stick.getRawButton(3)==True:
             self.S1.set(-0.4)
             self.S2.set(-0.4)
