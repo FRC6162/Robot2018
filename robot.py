@@ -14,7 +14,11 @@ class MyRobot(wpilib.IterativeRobot):
         This function is called upon program startup and
         should be used for any initialization code.
         """
-        self.Sol = wpilib.Solenoid(5,0)
+
+	#Pneumatics:
+	self.gearShiftLeft = wpilib.Solenoid(5,0)
+	self.gearShiftRight = wpilib.Solenoid(5,1)
+        self.goldenArrohead = wpilib.Solenoid(5,2) #Reference to Guyanese flag
 
         # Include limit switches for the elevator and shoulder mechanisms
         # 2018-2-16 Warning! The Switch's channel should be modified according to the robot! - Fixed
@@ -94,6 +98,12 @@ class MyRobot(wpilib.IterativeRobot):
             self.S1.set(0)
             self.S2.set(0)
 
+        #Pneumatics
+	#Powercube collector - Golden Arrowhead
+        if self.stick.getRawButton(5)==True:
+            self.goldenArrowhead.set(True)
+        elif self.stick.getRawButton(6)==True:
+            self.goldenArrowhead.set(False)
 
 if __name__ == "__main__":
     wpilib.run(MyRobot)
