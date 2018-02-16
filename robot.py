@@ -17,11 +17,11 @@ class MyRobot(wpilib.IterativeRobot):
         self.Sol = wpilib.Solenoid(5,0)
 
         # Include limit switches for the elevator and shoulder mechanisms
-        # 2018-2-16 Warning! The Switch's channel should be modified according to the robot!
+        # 2018-2-16 Warning! The Switch's channel should be modified according to the robot! - Fixed
+        self.SW0 = wpilib.DigitalInput(0)
         self.SW1 = wpilib.DigitalInput(1)
-        self.SW2 = wpilib.DigitalInput(1)
-        self.SW3 = wpilib.DigitalInput(1)
-        self.SW4 = wpilib.DigitalInput(1)
+        self.SW2 = wpilib.DigitalInput(2)
+        self.SW3 = wpilib.DigitalInput(3)
 
         # Left Motor Group Setup
         self.M0 = ctre.wpi_talonsrx.WPI_TalonSRX(4)
@@ -70,11 +70,11 @@ class MyRobot(wpilib.IterativeRobot):
         self.drive.arcadeDrive(-1*self.stick.getRawAxis(0), self.stick.getRawAxis(1))
 
         # Elevator
-        # 2018-2-16 Warning! The Switch number should be modified accroding to the robot!
-        if self.stick.getRawButton(1) == True & self.SW1 == False & self.SW2 == False:
+        # 2018-2-16 Warning! The Switch number should be modified accroding to the robot! - Fixed
+        if self.stick.getRawButton(1) == True & self.SW0.get() == False & self.SW1.get() == False:
             self.E1.set(0.8)
             self.E2.set(-0.8)
-        elif self.stick.getRawButton(2) == True & self.SW3 == False & self.SW4 == False:
+        elif self.stick.getRawButton(2) == True & self.SW2.get() == False & self.SW3.get() == False:
             self.E1.set(-0.8)
             self.E2.set(0.8)
         else:
