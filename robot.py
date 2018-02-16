@@ -14,11 +14,10 @@ class MyRobot(wpilib.IterativeRobot):
         This function is called upon program startup and
         should be used for any initialization code.
         """
-
-	#Pneumatics:
-	self.gearShiftLeft = wpilib.Solenoid(5,0)
-	self.gearShiftRight = wpilib.Solenoid(5,1)
-        self.goldenArrohead = wpilib.Solenoid(5,2) #Reference to Guyanese flag
+        # Pneumatics:
+        self.gearShiftLeft = wpilib.Solenoid(5,0)
+        self.gearShiftRight = wpilib.Solenoid(5,1)
+        self.goldenArrowhead = wpilib.Solenoid(5,2) # Reference to Guyanese flag
 
         # Include limit switches for the elevator and shoulder mechanisms
         # 2018-2-16 Warning! The Switch's channel should be modified according to the robot! - Fixed
