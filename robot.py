@@ -15,9 +15,11 @@ class MyRobot(wpilib.IterativeRobot):
         should be used for any initialization code.
         """
         # Pneumatics:
-        self.gearShiftLeft = wpilib.Solenoid(5,0)
-        self.gearShiftRight = wpilib.Solenoid(5,1)
+        self.leftGearShift = wpilib.Solenoid(5,0)
+        self.rightGearShift = wpilib.Solenoid(5,1)
         self.goldenArrowhead = wpilib.Solenoid(5,2) # Reference to Guyanese flag
+
+
 
         # Include limit switches for the elevator and shoulder mechanisms
         # 2018-2-16 Warning! The Switch's channel should be modified according to the robot! - Fixed
@@ -52,6 +54,8 @@ class MyRobot(wpilib.IterativeRobot):
         self.S1 = wpilib.VictorSP(2)
         self.S2 = wpilib.VictorSP(3)
 
+
+
     def autonomousInit(self):
         """This function is run once each time the robot enters autonomous mode."""
         self.timer.reset()
@@ -74,10 +78,10 @@ class MyRobot(wpilib.IterativeRobot):
 
         # Elevator
         # 2018-2-16 Warning! The Switch number should be modified accroding to the robot! - Fixed
-        if self.stick.getRawButton(1) == True & self.SW0.get() == False & self.SW1.get() == False:
+        if self.stick.getRawButton(1) == True: # & self.SW0.get() == False & self.SW1.get() == False:
             self.E1.set(0.8)
             self.E2.set(-0.8)
-        elif self.stick.getRawButton(2) == True & self.SW2.get() == False & self.SW3.get() == False:
+        elif self.stick.getRawButton(2) == True: #& self.SW2.get() == False & self.SW3.get() == False:
             self.E1.set(-0.8)
             self.E2.set(0.8)
         else:
@@ -86,13 +90,11 @@ class MyRobot(wpilib.IterativeRobot):
 
         # Shoulder
         if self.stick.getRawButton(3)==True:
-            self.S1.set(-0.4)
-            self.S2.set(-0.4)
-            self.Sol.set(False)
+            self.S1.set(0.25)
+            self.S2.set(0.25)
         elif self.stick.getRawButton(4)==True:
-            self.S1.set(0.4)
-            self.S2.set(0.4)
-            self.Sol.set(True)
+            self.S1.set(-0.25)
+            self.S2.set(-0.25)
         else:
             self.S1.set(0)
             self.S2.set(0)
@@ -103,6 +105,14 @@ class MyRobot(wpilib.IterativeRobot):
             self.goldenArrowhead.set(True)
         elif self.stick.getRawButton(6)==True:
             self.goldenArrowhead.set(False)
+        
+	#Shift Gears
+        if self.stick.getRawButton(7)==True:
+            self.leftGearShift.set(True)
+            self.rightGearShift.set(True)
+        elif self.stick.getRawButton(8)==True:
+            self.leftGearShift.set(False)
+            self.rightGearShift.set(False)
 
 if __name__ == "__main__":
     wpilib.run(MyRobot)
