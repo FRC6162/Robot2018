@@ -71,6 +71,8 @@ class MyRobot(wpilib.IterativeRobot):
         self.timer.start()
         self.EC1.reset()
         self.EC2.reset()
+        self.EC1.setDistancePerPulse(0.01)
+        
             
     def autonomousPeriodic(self):
         """This function is called periodically during autonomous."""
@@ -82,11 +84,11 @@ class MyRobot(wpilib.IterativeRobot):
         else:
             self.drive.arcadeDrive(0, 0)  # Stop robot
         '''
-        '''
-        if self.EC1.getDistance()==10.0:
+        if self.EC1.getDistance() <= 5.0:
+            self.drive.arcadeDrive(-0.5, 0)
+        else:
             self.drive.arcadeDrive(0,0)
-        '''
-
+           
     def teleopPeriodic(self):
         """This function is called periodically during operator control."""
 
