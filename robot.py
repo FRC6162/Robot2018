@@ -60,8 +60,8 @@ class MyRobot(wpilib.IterativeRobot):
         self.SV1.set(0.0)
         #self.SV2.set(0.0)
         #Encoder
-        self.EC1 = wpilib.Encoder(aChannel=0, bChannel=1)
-        self.EC2 = wpilib.Encoder(aChannel=2, bChannel=3)
+        self.EC1 = wpilib.Encoder(0,1,False)
+        self.EC2 = wpilib.Encoder(2,3,False)
 
 
 
