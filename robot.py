@@ -14,6 +14,13 @@ class MyRobot(wpilib.IterativeRobot):
         This function is called upon program startup and
         should be used for any initialization code.
         """
+
+	#Counters
+        self.getCubeCounter = 0
+
+        #Drive Factor - adjust controller reponsiveness
+        self.driveFactor = 0.5
+
         # Pneumatics:
         self.leftGearShift = wpilib.Solenoid(5,0)
         self.rightGearShift = wpilib.Solenoid(5,1)
@@ -42,6 +49,7 @@ class MyRobot(wpilib.IterativeRobot):
 
         # Drive setup
         self.drive = wpilib.drive.DifferentialDrive(self.left, self.right)
+        self.drive.setMaxOutput(self.driveFactor)
 
         # Misc Setting
         self.stick = wpilib.Joystick(0)
@@ -80,11 +88,6 @@ class MyRobot(wpilib.IterativeRobot):
         pass
         # Drive for two seconds
         '''
-        if self.timer.get() < 2.0:
-            self.drive.arcadeDrive(-0.5, 0)  # Drive forwards at half speed
-        else:
-            self.drive.arcadeDrive(0, 0)  # Stop robot
-        
         if self.EC1.getDistance() <= 5.0:
             self.drive.arcadeDrive(-0.5, 0)
         else:
@@ -93,35 +96,40 @@ class MyRobot(wpilib.IterativeRobot):
         '''   
     def teleopPeriodic(self):
         """This function is called periodically during operator control."""
-
-        # Drive setting
-        self.drive.arcadeDrive(-1*self.stick.getRawAxis(0), self.stick.getRawAxis(1))
+	
+	#Set the maximum output of the drive based on the left trigger:
+        self.drive.setMaxOutput(1.0-self.stick.getRawAxis(2))
+        # Drive setting - use left stick for forward drive and right stick for backward drive
+        if self.stick.getRawAxis(4)==0 and self.stick.getRawAxis(5)==0:
+            self.drive.arcadeDrive(-1*self.stick.getRawAxis(0), self.stick.getRawAxis(1))
+        if self.stick.getRawAxis(0)==0 and self.stick.getRawAxis(1)==0:
+            self.drive.arcadeDrive(-1*self.stick.getRawAxis(4),self.stick.getRawAxis(5))
 
         # Elevator
         # 2018-2-16 Warning! The Switch number should be modified accroding to the robot! - Fixed
         if self.stick.getRawButton(1) == True: # & self.SW0.get() == False & self.SW1.get() == False:
-            self.E1.set(0.8)
-            self.E2.set(-0.8)
+            self.E1.set(1)
+            self.E2.set(-1)
         elif self.stick.getRawButton(2) == True: #& self.SW2.get() == False & self.SW3.get() == False:
-            self.E1.set(-0.8)
-            self.E2.set(0.8)
+            self.E1.set(-1)
+            self.E2.set(1)
         else:
             self.E1.set(0)
             self.E2.set(0)
 
         # Shoulder
         if self.stick.getRawButton(3)==True:
-            self.S1.set(0.25)
-            self.S2.set(0.25)
+            self.S1.set(1)
+            self.S2.set(1)
         elif self.stick.getRawButton(4)==True:
-            self.S1.set(-0.25)
-            self.S2.set(-0.25)
+            self.S1.set(-1)
+            self.S2.set(-1)
         else:
             self.S1.set(0)
             self.S2.set(0)
 
         #Pneumatics
-	#Powercube collector - Golden Arrowhead
+	#Powercube collector - "Golden Arrowhead"
         if self.stick.getRawButton(5)==True:
             self.goldenArrowhead.set(True)
         elif self.stick.getRawButton(6)==True:
@@ -134,13 +142,15 @@ class MyRobot(wpilib.IterativeRobot):
         elif self.stick.getRawButton(8)==True:
             self.leftGearShift.set(False)
             self.rightGearShift.set(False)
-        '''    #Servo:
-        if self.stick.getPOV()==90:
-            self.SV1.set(1.0)
-            #self.SV2.set(1.0)
-	#State Machine
+        #Camera Point Front:
         if self.stick.getPOV()==0:
-            self.getCubeCounter=27
+            self.SV1.set(1.0)
+	#Camera Point Back:
+        if self.stick.getPOV()==90:
+            self.SV1.set(-1.0)
+        #State Machine
+        if self.stick.getPOV()==270:
+           self.getCubeCounter = 27
         if self.getCubeCounter>0:
             self.getCube()
             self.getCubeCounter-=1
@@ -148,9 +158,10 @@ class MyRobot(wpilib.IterativeRobot):
         #   self.state_machine.engage()
         #if self.joystick.getRawButton(6):
         #   self.state_machine.done()
-        ''' 
+       
+    #This function attempts to execute a state machine
     def getCube(self):
-        if self.getCubeCounter>20 and self.getCubeCounter<251:
+        if self.getCubeCounter>20:
             self.E1.set(-0.8)
             self.E2.set(0.8)
         if self.getCubeCounter==15:
@@ -161,7 +172,7 @@ class MyRobot(wpilib.IterativeRobot):
         if self.getCubeCounter<=5:
             self.S1.set(0.25)
             self.S2.set(0.25)
-	
+        return 1.0	
 if __name__ == "__main__":
     wpilib.run(MyRobot)
 
