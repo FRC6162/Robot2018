@@ -71,7 +71,7 @@ class MyRobot(wpilib.IterativeRobot):
         self.timer.start()
         self.EC1.reset()
         self.EC2.reset()
-        self.EC1.setDistancePerPulse(0.01)
+        self.EC1.setDistancePerPulse(0.01)        
         
             
     def autonomousPeriodic(self):
@@ -88,6 +88,7 @@ class MyRobot(wpilib.IterativeRobot):
             self.drive.arcadeDrive(-0.5, 0)
         else:
             self.drive.arcadeDrive(0,0)
+        #self.EC1.getRate() - Get the current rate of the encoder. Units are distance per second as scaled by the value from setDistancePerPulse().
            
     def teleopPeriodic(self):
         """This function is called periodically during operator control."""
@@ -142,6 +143,10 @@ class MyRobot(wpilib.IterativeRobot):
         if self.getCubeCounter>0:
             self.getCube()
             self.getCubeCounter-=1
+        #if self.stick.getRawbutton(5):
+        #   self.state_machine.engage()
+        #if self.joystick.getRawButton(6):
+        #   self.state_machine.done()
     
     def getCube(self):
         if self.getCubeCounter>200 and self.getCubeCounter<251:
