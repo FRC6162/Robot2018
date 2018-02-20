@@ -53,6 +53,15 @@ class MyRobot(wpilib.IterativeRobot):
         # Shoulder
         self.S1 = wpilib.VictorSP(2)
         self.S2 = wpilib.VictorSP(3)
+        #Servo
+        #channel number!
+        self.SV1 = wpilib.Servo(4)
+        #self.SV2 = wpilib.Servo(5)
+        self.SV1.set(0.0)
+        #self.SV2.set(0.0)
+        #Encoder
+        self.EC1 = wpilib.Encoder(0,1,False)
+        self.EC2 = wpilib.Encoder(2,3,False)
 
 
 
@@ -60,16 +69,27 @@ class MyRobot(wpilib.IterativeRobot):
         """This function is run once each time the robot enters autonomous mode."""
         self.timer.reset()
         self.timer.start()
-
+        self.EC1.reset()
+        self.EC2.reset()
+        self.EC1.setDistancePerPulse(0.01)        
+        
+            
     def autonomousPeriodic(self):
         """This function is called periodically during autonomous."""
 
         # Drive for two seconds
+        '''
         if self.timer.get() < 2.0:
             self.drive.arcadeDrive(-0.5, 0)  # Drive forwards at half speed
         else:
             self.drive.arcadeDrive(0, 0)  # Stop robot
-
+        '''
+        if self.EC1.getDistance() <= 5.0:
+            self.drive.arcadeDrive(-0.5, 0)
+        else:
+            self.drive.arcadeDrive(0,0)
+        #self.EC1.getRate() - Get the current rate of the encoder. Units are distance per second as scaled by the value from setDistancePerPulse().
+           
     def teleopPeriodic(self):
         """This function is called periodically during operator control."""
 
@@ -113,7 +133,34 @@ class MyRobot(wpilib.IterativeRobot):
         elif self.stick.getRawButton(8)==True:
             self.leftGearShift.set(False)
             self.rightGearShift.set(False)
-
+    #Servo:
+        if self.getPOV()==90:
+            self.SV1.set(1.0)
+            #self.SV2.set(1.0)
+	#State Machine
+        if wpilib.getPOV()==0:
+            self.getCubeCounter=271
+        if self.getCubeCounter>0:
+            self.getCube()
+            self.getCubeCounter-=1
+        #if self.stick.getRawbutton(5):
+        #   self.state_machine.engage()
+        #if self.joystick.getRawButton(6):
+        #   self.state_machine.done()
+    
+    def getCube(self):
+        if self.getCubeCounter>200 and self.getCubeCounter<251:
+            self.E1.set(-0.8)
+            self.E2.set(0.8)
+        if self.getCubeCounter==200:
+            self.goldenArrowhead.set(True)
+        if self.getCubeCounter<200 and self.getCubeCounter>150:
+            self.E1.set(0.8)
+            self.E2.set(-0.8)
+        if self.getCubeCounter<=150:
+            self.S1.set(0.25)
+            self.S2.set(0.25)
+	
 if __name__ == "__main__":
     wpilib.run(MyRobot)
 
