@@ -19,6 +19,8 @@ class MyRobot(wpilib.IterativeRobot):
 	#Counters
         self.getCubeCounter = 0
         self.dropCubeCounter = 0
+        self.elevatorDownCounter = 0
+        self.elevatorUpCounter = 0
         self.cubeTravelUp = 50
         self.cubeTravelStop = 1
 
@@ -73,9 +75,6 @@ class MyRobot(wpilib.IterativeRobot):
         #self.SV2 = wpilib.Servo(5)
         #self.SV1.set(0.0)
         #self.SV2.set(0.0)
-        #Encoder
-        #self.EC1 = wpilib.Encoder(0,1,False)
-        #self.EC2 = wpilib.Encoder(2,3,False)
 
 
 
@@ -91,15 +90,15 @@ class MyRobot(wpilib.IterativeRobot):
             
     def autonomousPeriodic(self):
         """This function is called periodically during autonomous."""
-        pass
+
         # Drive for two seconds
-        '''
-        if self.EC1.getDistance() <= 5.0:
+
+        if self.leftEncoder.getDistance() <= 1.0:
             self.drive.arcadeDrive(-0.5, 0)
         else:
             self.drive.arcadeDrive(0,0)
         #self.EC1.getRate() - Get the current rate of the encoder. Units are distance per second as scaled by the value from setDistancePerPulse().
-        '''   
+
     def teleopPeriodic(self):
         """This function is called periodically during operator control."""
 	
@@ -158,7 +157,10 @@ class MyRobot(wpilib.IterativeRobot):
         if self.stick.getPOV()==270:
            self.getCubeCounter = 51
         if self.stick.getPOV()==90:
-            self.dropCubeCounter = 51
+            self.elevatorDownCounter = 51
+        if self.stick.getPOV() == 135:
+            self.elevatorUpCounter = 51
+
         if self.getCubeCounter>0:
             self.getCube()
             self.getCubeCounter-=1
@@ -173,7 +175,7 @@ class MyRobot(wpilib.IterativeRobot):
     #This function attempts to execute a state machine
     def getCube(self):
         #Check that bottom limit switch is on.  If it is not, kill the procedure:
-        if self.SW0.get() == False:
+        if self.SW0.get() == True:
             self.getCubeCounter = 0
         #Grab the Cube (False position)
         if self.getCubeCounter==self.cubeTravelUp:
@@ -195,6 +197,20 @@ class MyRobot(wpilib.IterativeRobot):
         if self.dropCubeCounter == 1:
             self.goldenArrowhead.set(True)
         return 1.0
+
+    def elevatorDown(self):
+        if self.SW0.get()==False:
+            elevatorDownCounter = 0
+        else:
+            self.E1.set(-0.2)
+            self.E2.set(0.2)
+
+    def elevatorUp(self):
+        if self.SW1.get()==True:
+            elevatorDownCounter = 0
+        else:
+            self.E1.set(0.2)
+            self.E2.set(-0.2)
 if __name__ == "__main__":
     wpilib.run(MyRobot)
 
