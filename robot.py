@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/en5v python3
 """
     This is a good foundation to build your robot code on
 """
@@ -14,26 +14,32 @@ class MyRobot(wpilib.IterativeRobot):
         This function is called upon program startup and
         should be used for any initialization code.
         """
-
+        #Camera:
+        wpilib.CameraServer.launch()
 	#Counters
         self.getCubeCounter = 0
+        self.dropCubeCounter = 0
+        self.cubeTravelUp = 50
+        self.cubeTravelStop = 1
 
         #Drive Factor - adjust controller reponsiveness
         self.driveFactor = 0.5
+
+        #Encoders - left and right, attached to gearbox
+        self.leftEncoder = wpilib.Encoder(4,5)
+        self.rightEncoder = wpilib.Encoder(6,7)
 
         # Pneumatics:
         self.leftGearShift = wpilib.Solenoid(5,0)
         self.rightGearShift = wpilib.Solenoid(5,1)
         self.goldenArrowhead = wpilib.Solenoid(5,2) # Reference to Guyanese flag
 
-
-
         # Include limit switches for the elevator and shoulder mechanisms
         # 2018-2-16 Warning! The Switch's channel should be modified according to the robot! - Fixed
-        self.SW0 = wpilib.DigitalInput(0)
-        self.SW1 = wpilib.DigitalInput(1)
-        self.SW2 = wpilib.DigitalInput(2)
-        self.SW3 = wpilib.DigitalInput(3)
+        self.SW0 = wpilib.DigitalInput(0) #Lower Elevator Switch
+        self.SW1 = wpilib.DigitalInput(1) #Upper Elevator Switch
+        self.SW2 = wpilib.DigitalInput(2) #Lower shoulder switch
+        self.SW3 = wpilib.DigitalInput(3) #Upper shoulder switch
 
         # Left Motor Group Setup
         self.M0 = ctre.wpi_talonsrx.WPI_TalonSRX(4)
@@ -98,12 +104,12 @@ class MyRobot(wpilib.IterativeRobot):
         """This function is called periodically during operator control."""
 	
 	#Set the maximum output of the drive based on the left trigger:
-        self.drive.setMaxOutput(1.0-self.stick.getRawAxis(2))
+        self.drive.setMaxOutput(1.0-self.stick.getRawAxis(3))
         # Drive setting - use left stick for forward drive and right stick for backward drive
-        if self.stick.getRawAxis(4)==0 and self.stick.getRawAxis(5)==0:
-            self.drive.arcadeDrive(-1*self.stick.getRawAxis(0), self.stick.getRawAxis(1))
-        if self.stick.getRawAxis(0)==0 and self.stick.getRawAxis(1)==0:
-            self.drive.arcadeDrive(-1*self.stick.getRawAxis(4),self.stick.getRawAxis(5))
+        #if self.stick.getRawAxis(4)==0 and self.stick.getRawAxis(5)==0:
+        self.drive.arcadeDrive(-1*self.stick.getRawAxis(0), self.stick.getRawAxis(1))
+        #if self.stick.getRawAxis(0)==0 and self.stick.getRawAxis(1)==0:
+        #    self.drive.arcadeDrive(-1*self.stick.getRawAxis(4),self.stick.getRawAxis(5))
 
         # Elevator
         # 2018-2-16 Warning! The Switch number should be modified accroding to the robot! - Fixed
@@ -119,11 +125,11 @@ class MyRobot(wpilib.IterativeRobot):
 
         # Shoulder
         if self.stick.getRawButton(3)==True:
-            self.S1.set(1)
-            self.S2.set(1)
+            self.S1.set(0.25)
+            self.S2.set(0.25)
         elif self.stick.getRawButton(4)==True:
-            self.S1.set(-1)
-            self.S2.set(-1)
+            self.S1.set(-0.25)
+            self.S2.set(-0.25)
         else:
             self.S1.set(0)
             self.S2.set(0)
@@ -146,14 +152,19 @@ class MyRobot(wpilib.IterativeRobot):
         if self.stick.getPOV()==0:
             self.SV1.set(1.0)
 	#Camera Point Back:
-        if self.stick.getPOV()==90:
+        if self.stick.getPOV()==180:
             self.SV1.set(-1.0)
         #State Machine
         if self.stick.getPOV()==270:
-           self.getCubeCounter = 27
+           self.getCubeCounter = 51
+        if self.stick.getPOV()==90:
+            self.dropCubeCounter = 51
         if self.getCubeCounter>0:
             self.getCube()
             self.getCubeCounter-=1
+        if self.dropCubeCounter>0:
+            self.dropCube()
+            self.dropCubeCounter-=1
         #if self.stick.getRawbutton(5):
         #   self.state_machine.engage()
         #if self.joystick.getRawButton(6):
@@ -161,18 +172,29 @@ class MyRobot(wpilib.IterativeRobot):
        
     #This function attempts to execute a state machine
     def getCube(self):
-        if self.getCubeCounter>20:
+        #Check that bottom limit switch is on.  If it is not, kill the procedure:
+        if self.SW0.get() == False:
+            self.getCubeCounter = 0
+        #Grab the Cube (False position)
+        if self.getCubeCounter==self.cubeTravelUp:
+            self.goldenArrowhead.set(False)
+        #Move elevator up:
+        if self.getCubeCounter<self.cubeTravelUp and self.getCubeCounter>self.cubeTravelStop:
             self.E1.set(-0.8)
             self.E2.set(0.8)
-        if self.getCubeCounter==15:
+        #If the top limit switch is set, stop the procedure:
+        if self.SW1.get() == True:
+            self.getCubeCounter = 0
+        return 1.0
+
+    # This function attempts to execute a state machine
+    def dropCube(self):
+        if self.dropCubeCounter < 50 and self.dropCubeCounter > 5:
+            self.S1.set(-0.25)
+            self.S2.set(-0.25)
+        if self.dropCubeCounter == 1:
             self.goldenArrowhead.set(True)
-        if self.getCubeCounter<10 and self.getCubeCounter>5:
-            self.E1.set(0.8)
-            self.E2.set(-0.8)
-        if self.getCubeCounter<=5:
-            self.S1.set(0.25)
-            self.S2.set(0.25)
-        return 1.0	
+        return 1.0
 if __name__ == "__main__":
     wpilib.run(MyRobot)
 
