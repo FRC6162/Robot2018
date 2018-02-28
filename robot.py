@@ -16,7 +16,7 @@ class MyRobot(wpilib.IterativeRobot):
         """
         #Camera:
         wpilib.CameraServer.launch()
-	#Counters
+        #Counters
         self.getCubeCounter = 0
         self.dropCubeCounter = 0
         self.elevatorDownCounter = 0
@@ -66,20 +66,47 @@ class MyRobot(wpilib.IterativeRobot):
         # E = Elevator
         self.E1 = wpilib.VictorSP(0)
         self.E2 = wpilib.VictorSP(1)
+        
         # Shoulder
         self.S1 = wpilib.VictorSP(2)
         self.S2 = wpilib.VictorSP(3)
+        
         #Servo
-        #channel number!
         self.SV1 = wpilib.Servo(4)
         #self.SV2 = wpilib.Servo(5)
         #self.SV1.set(0.0)
         #self.SV2.set(0.0)
+        
+        #Encoder for the shoulder
+        
+        
 
 
 
     def autonomousInit(self):
-        pass
+        
+        
+        #All possible autonomous routines in a sendable chooser
+        #Each po0ssibility has a list of items:
+        #Example Start position 1 + scale: straight 3.5m turn 90 right forward 1.0m deliver cube
+        self.cumulativeTime=0
+        self.totalTime=0
+        self.dataSet=[[-0.5,0,1,-1.0],[0.3,0.4,1,1.0],[-0.5,0,1,-1.0]]
+        for i in self.dataSet:
+            self.totalTime+=i[2]
+        self.intervals = 0
+        self.currentTime = 0
+        for i in range(0,len(self.dataSet)):
+            self.dataSet[i].append([self.currentTime,self.currentTime+self.dataSet[i][2]])
+            self.currentTime+=self.dataSet[i][2]
+        for i in self.dataSet:
+            if i[3]==1.0:
+                i.append("Forward")
+            if i[3]==-1.0:
+                i.append("Backward")
+                
+        self.timer.reset()
+        self.timer.start()
         """This function is run once each time the robot enters autonomous mode."""
         #self.timer.reset()
         #self.timer.start()
@@ -90,19 +117,27 @@ class MyRobot(wpilib.IterativeRobot):
             
     def autonomousPeriodic(self):
         """This function is called periodically during autonomous."""
-
+        for i in self.dataSet:
+            if i[4][0] < self.timer.get() and self.timer.get() <= i[4][1]:
+                self.drive.arcadeDrive(i[0],i[1])
+                self.SV1.set(i[3])
+                self.sd.putValue("Camera",i[5])
+            else:
+                self.drive.arcadeDrive(0,0)
+                
         # Drive for two seconds
-
+        '''
         if self.leftEncoder.getDistance() <= 1.0:
             self.drive.arcadeDrive(-0.5, 0)
         else:
             self.drive.arcadeDrive(0,0)
+        '''
         #self.EC1.getRate() - Get the current rate of the encoder. Units are distance per second as scaled by the value from setDistancePerPulse().
-
+        
     def teleopPeriodic(self):
         """This function is called periodically during operator control."""
 	
-	#Set the maximum output of the drive based on the left trigger:
+        #Set the maximum output of the drive based on the left trigger:
         self.drive.setMaxOutput(1.0-self.stick.getRawAxis(3))
         # Drive setting - use left stick for forward drive and right stick for backward drive
         #if self.stick.getRawAxis(4)==0 and self.stick.getRawAxis(5)==0:
