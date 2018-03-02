@@ -6,6 +6,8 @@ import ctre
 import wpilib
 import wpilib.drive
 from networktables import NetworkTables
+#from robotpy_ext.autonomous import AutonomousModeSelector
+
 
 
 class MyRobot(wpilib.IterativeRobot):
@@ -27,6 +29,10 @@ class MyRobot(wpilib.IterativeRobot):
         self.elevatorUpCounter = 0
         self.cubeTravelUp = 50
         self.cubeTravelStop = 1
+        #Flags
+        self.prepareCubeFlag=0
+        self.grabCubeFlag=0
+        self.deliverCubeFlag=0
 
         #Drive Factor - adjust controller reponsiveness
         self.driveFactor = 0.5
@@ -88,12 +94,13 @@ class MyRobot(wpilib.IterativeRobot):
         
         #All possible autonomous routines in a sendable chooser
         self.chooser = wpilib.SendableChooser()
-        self.chooser.addDefault("None", 4)
-        self.chooser.addObject("left-LeftScale", 1)
-        self.chooser.addObject("Middle-LeftScale", 2)
-        self.chooser.addObject("Right-LeftScale", 3)
-        self.chooser.addObject("Left-RightScale", 5)
-        wpilib.SmartDashboard.putData("Choice", self.chooser)
+        self.chooser.addDefault("None", '4')
+        self.chooser.addObject("left-LeftScale", '1')
+        self.chooser.addObject("Middle-LeftScale", '2')
+        self.chooser.addObject("Right-LeftScale", '3')
+        self.chooser.addObject("Left-RightScale", '5')
+        wpilib.SmartDashboard.putData('Choice', self.chooser)
+    
 
 
 
@@ -104,7 +111,7 @@ class MyRobot(wpilib.IterativeRobot):
         #Example Start position 1 + scale: straight 3.5m turn 90 right forward 1.0m deliver cube
         self.timer.reset()
         self.timer.start()
-        
+        self.auto = self.chooser.getSelected()
         '''
         self.cumulativeTime=0
         self.totalTime=0
@@ -132,6 +139,7 @@ class MyRobot(wpilib.IterativeRobot):
             
     def autonomousPeriodic(self):
         """This function is called periodically during autonomous."""
+        '''
         for i in self.dataSet:
             if i[4][0] < self.timer.get() and self.timer.get() <= i[4][1]:
                 self.drive.arcadeDrive(i[0],i[1])
@@ -139,7 +147,7 @@ class MyRobot(wpilib.IterativeRobot):
                 self.sd.putValue("Camera",i[5])
             else:
                 self.drive.arcadeDrive(0,0)
-                
+        '''       
         # Drive for two seconds
         '''
         if self.leftEncoder.getDistance() <= 1.0:
@@ -147,6 +155,9 @@ class MyRobot(wpilib.IterativeRobot):
         else:
             self.drive.arcadeDrive(0,0)
         '''
+        if(self.auto == '1'):
+            pass
+            #place your code here
         #self.EC1.getRate() - Get the current rate of the encoder. Units are distance per second as scaled by the value from setDistancePerPulse().
         
     def teleopPeriodic(self):
@@ -247,7 +258,7 @@ class MyRobot(wpilib.IterativeRobot):
         #Dashboard
         self.sd.putNumber('Speed', 0.5)
         self.sd.putNumber('Heading',self.gyro.getAngle())
-        self.sd.putValue("Camera", self.camera)
+        #self.sd.putValue("Camera", self.camera)
         self.sd.putValue("SW1", self.SW1.get())
         self.sd.putValue("SW0", self.SW0.get())
     def prepareGrabCube(self):
