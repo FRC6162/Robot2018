@@ -5,6 +5,9 @@
 import ctre
 import wpilib
 import wpilib.drive
+from networktables import NetworkTables
+#from robotpy_ext.autonomous import AutonomousModeSelector
+
 
 
 class MyRobot(wpilib.IterativeRobot):
@@ -14,15 +17,22 @@ class MyRobot(wpilib.IterativeRobot):
         This function is called upon program startup and
         should be used for any initialization code.
         """
+        #Initialize Networktables
+        self.sd = NetworkTables.getTable('SmartDashboard')
+
         #Camera:
         wpilib.CameraServer.launch()
-	#Counters
+        #Counters
         self.getCubeCounter = 0
         self.dropCubeCounter = 0
         self.elevatorDownCounter = 0
         self.elevatorUpCounter = 0
         self.cubeTravelUp = 50
         self.cubeTravelStop = 1
+        #Flags
+        self.prepareCubeFlag=0
+        self.grabCubeFlag=0
+        self.deliverCubeFlag=0
 
         #Drive Factor - adjust controller reponsiveness
         self.driveFactor = 0.5
@@ -69,20 +79,59 @@ class MyRobot(wpilib.IterativeRobot):
         # Shoulder
         self.S1 = wpilib.VictorSP(2)
         self.S2 = wpilib.VictorSP(3)
+        
         #Servo
-        #channel number!
         self.SV1 = wpilib.Servo(4)
         #self.SV2 = wpilib.Servo(5)
         #self.SV1.set(0.0)
         #self.SV2.set(0.0)
+        
+        #Gyro
+        self.gyro = wpilib.ADXRS450_Gyro(0)
+        self.gyro.reset()
+        
+        #Encoder for the shoulder
+        
+        #All possible autonomous routines in a sendable chooser
+        self.chooser = wpilib.SendableChooser()
+        self.chooser.addDefault("None", '4')
+        self.chooser.addObject("left-LeftScale", '1')
+        self.chooser.addObject("Middle-LeftScale", '2')
+        self.chooser.addObject("Right-LeftScale", '3')
+        self.chooser.addObject("Left-RightScale", '5')
+        wpilib.SmartDashboard.putData('Choice', self.chooser)
+    
 
 
 
     def autonomousInit(self):
-        pass
         """This function is run once each time the robot enters autonomous mode."""
-        #self.timer.reset()
-        #self.timer.start()
+        #All possible autonomous routines in a sendable chooser
+        #Each possibility has a list of items:
+        #Example Start position 1 + scale: straight 3.5m turn 90 right forward 1.0m deliver cube
+        self.timer.reset()
+        self.timer.start()
+        self.auto = self.chooser.getSelected()
+        '''
+        self.cumulativeTime=0
+        self.totalTime=0
+        self.dataSet=[[-0.5,0,1,-1.0],[0.3,0.4,1,1.0],[-0.5,0,1,-1.0]]
+        for i in self.dataSet:
+            self.totalTime+=i[2]
+        self.intervals = 0
+        self.currentTime = 0
+        for i in range(0,len(self.dataSet)):
+            self.dataSet[i].append([self.currentTime,self.currentTime+self.dataSet[i][2]])
+            self.currentTime+=self.dataSet[i][2]
+        for i in self.dataSet:
+            if i[3]==1.0:
+                i.append("Forward")
+            if i[3]==-1.0:
+                i.append("Backward")
+                
+        self.timer.reset()
+        self.timer.start()
+        '''
         #self.EC1.reset()
         #self.EC2.reset()
         #self.EC1.setDistancePerPulse(0.01)        
@@ -90,19 +139,31 @@ class MyRobot(wpilib.IterativeRobot):
             
     def autonomousPeriodic(self):
         """This function is called periodically during autonomous."""
-
+        '''
+        for i in self.dataSet:
+            if i[4][0] < self.timer.get() and self.timer.get() <= i[4][1]:
+                self.drive.arcadeDrive(i[0],i[1])
+                self.SV1.set(i[3])
+                self.sd.putValue("Camera",i[5])
+            else:
+                self.drive.arcadeDrive(0,0)
+        '''       
         # Drive for two seconds
-
+        '''
         if self.leftEncoder.getDistance() <= 1.0:
             self.drive.arcadeDrive(-0.5, 0)
         else:
             self.drive.arcadeDrive(0,0)
+        '''
+        if(self.auto == '1'):
+            pass
+            #place your code here
         #self.EC1.getRate() - Get the current rate of the encoder. Units are distance per second as scaled by the value from setDistancePerPulse().
-
+        
     def teleopPeriodic(self):
         """This function is called periodically during operator control."""
 	
-	#Set the maximum output of the drive based on the left trigger:
+        #Set the maximum output of the drive based on the left trigger:
         self.drive.setMaxOutput(1.0-self.stick.getRawAxis(3))
         # Drive setting - use left stick for forward drive and right stick for backward drive
         #if self.stick.getRawAxis(4)==0 and self.stick.getRawAxis(5)==0:
@@ -112,6 +173,7 @@ class MyRobot(wpilib.IterativeRobot):
 
         # Elevator
         # 2018-2-16 Warning! The Switch number should be modified accroding to the robot! - Fixed
+        '''
         if self.stick.getRawButton(1) == True: # & self.SW0.get() == False & self.SW1.get() == False:
             self.E1.set(1)
             self.E2.set(-1)
@@ -132,85 +194,115 @@ class MyRobot(wpilib.IterativeRobot):
         else:
             self.S1.set(0)
             self.S2.set(0)
+        '''
 
         #Pneumatics
 	#Powercube collector - "Golden Arrowhead"
+        if self.stick.getRawButton(1) == True:
+            self.prepareCubeFlag = 1
+        if self.prepareCubeFlag > 0:
+            self.prepareGrabCube()
+        if self.stick.getRawButton(2) == True:
+            self.grabCubeFlag = 1
+        if self.grabCubeFlag > 0:
+            self.grabCube()
+            self.grabCube()
+        if self.stick.getRawButton(3) == True:
+            self.deliverCubeFlag = 1
+        if self.deliverCubeFlag > 0:   
+            self.deliverCube()
+            
         if self.stick.getRawButton(5)==True:
             self.goldenArrowhead.set(True)
         elif self.stick.getRawButton(6)==True:
             self.goldenArrowhead.set(False)
         
-	#Shift Gears
+        #Shift Gears
         if self.stick.getRawButton(7)==True:
             self.leftGearShift.set(True)
             self.rightGearShift.set(True)
         elif self.stick.getRawButton(8)==True:
             self.leftGearShift.set(False)
             self.rightGearShift.set(False)
+            
         #Camera Point Front:
         if self.stick.getPOV()==0:
             self.SV1.set(1.0)
-	#Camera Point Back:
+            self.camera='Forwards'
+        #Camera Point Back:
         if self.stick.getPOV()==180:
             self.SV1.set(-1.0)
-        #State Machine
-        if self.stick.getPOV()==270:
-           self.getCubeCounter = 51
+            self.camera='Backwards'
+        #Adjust left elevators
         if self.stick.getPOV()==90:
-            self.elevatorDownCounter = 51
-        if self.stick.getPOV() == 135:
-            self.elevatorUpCounter = 51
-
-        if self.getCubeCounter>0:
-            self.getCube()
-            self.getCubeCounter-=1
-        if self.dropCubeCounter>0:
-            self.dropCube()
-            self.dropCubeCounter-=1
-        #if self.stick.getRawbutton(5):
-        #   self.state_machine.engage()
-        #if self.joystick.getRawButton(6):
-        #   self.state_machine.done()
-       
-    #This function attempts to execute a state machine
-    def getCube(self):
-        #Check that bottom limit switch is on.  If it is not, kill the procedure:
-        if self.SW0.get() == True:
-            self.getCubeCounter = 0
-        #Grab the Cube (False position)
-        if self.getCubeCounter==self.cubeTravelUp:
+            self.E1.set(-0.3)
+        
+        #Adjust right elevators
+        if self.stick.getPOV()==270:
+            self.E2.set(0.3)
+        
+        #State Machine
+        if self.stick.getRawButton(5) == True:
+            self.goldenArrowhead.set(True)
+        if self.stick.getRawButton(6) == True:
             self.goldenArrowhead.set(False)
-        #Move elevator up:
-        if self.getCubeCounter<self.cubeTravelUp and self.getCubeCounter>self.cubeTravelStop:
-            self.E1.set(-0.8)
-            self.E2.set(0.8)
-        #If the top limit switch is set, stop the procedure:
-        if self.SW1.get() == True:
-            self.getCubeCounter = 0
-        return 1.0
+        '''
+        if self.gyro.getAngle() == 0:
+            self.E.set(0.5)
+            self.sd.putNumber('Gyro',0)
+        if self.gyro.getAngle() == 90:
+            self.E.set(0)
+            self.sd.putNumber('Gyro',90)
+        '''
+        
+        #Dashboard
+        self.sd.putNumber('Speed', 0.5)
+        self.sd.putNumber('Heading',self.gyro.getAngle())
+        #self.sd.putValue("Camera", self.camera)
+        self.sd.putValue("SW1", self.SW1.get())
+        self.sd.putValue("SW0", self.SW0.get())
+    def prepareGrabCube(self):
+    #(1)Check that the lower elevator switch is on - elevator at bottom
+	#(2)If not, move elevator to bottom (and arms to bottom)
+        if self.SW0.get()==True:
+            self.E1.set(0.5)
+            self.E2.set(-0.5)
+            self.prepareCubeFlag +=1
+        if self.SW0.get()==False or self.prepareCubeFlag > 50:
+            self.E1.set(0)
+            self.E2.set(0)
+            self.prepareCubeFlag = 0
 
-    # This function attempts to execute a state machine
-    def dropCube(self):
-        if self.dropCubeCounter < 50 and self.dropCubeCounter > 5:
+    def grabCube(self):
+    #(1)Grab cube
+    #(2) Move cube up until it hits the top (or part way up????)
+        self.goldenArrowhead.set(True) #Grabs the cube(not sure it is True or False)
+        if self.SW1.get() == True:
+            self.E1.set(-0.5)
+            self.E2.set(0.5)
+            self.grabCubeFlag +=1
+        if self.SW1.get() == False or self.grabCubeFlag > 50:
+            self.E1.set(0)
+            self.E2.set(0)
+            self.grabCubeFlag = 0
+       
+    def deliverCube(self):
+        '''
+        if self.SW0.get() == True:
+            self.E.set(0.5)
+        if self.SW0.get() == False:
+            self.SV2.set(0.5)
+            self.E.set(0)
+            self.deliverCubeFlag = 0
+        '''
+        if self.deliverCubeFlag < 50 and self.deliverCubeFlag > 0:
             self.S1.set(-0.25)
             self.S2.set(-0.25)
-        if self.dropCubeCounter == 1:
-            self.goldenArrowhead.set(True)
-        return 1.0
-
-    def elevatorDown(self):
-        if self.SW0.get()==False:
-            elevatorDownCounter = 0
-        else:
-            self.E1.set(-0.2)
-            self.E2.set(0.2)
-
-    def elevatorUp(self):
-        if self.SW1.get()==True:
-            elevatorDownCounter = 0
-        else:
-            self.E1.set(0.2)
-            self.E2.set(-0.2)
+            self.deliverCubeFlag+=1
+        if self.deliverCubeFlag >=50:
+            self.goldenArrowhead.set(False)
+            self.deliverCubeFlag=0
+    
 if __name__ == "__main__":
     wpilib.run(MyRobot)
 
