@@ -112,6 +112,7 @@ class MyRobot(wpilib.IterativeRobot):
         #Example Start position 1 + scale: straight 3.5m turn 90 right forward 1.0m deliver cube
         self.timer.reset()
         self.timer.start()
+        self.autoState = 0
         #self.auto = self.chooser.getSelected()
         '''
         self.cumulativeTime=0
@@ -229,36 +230,51 @@ class MyRobot(wpilib.IterativeRobot):
         #Right -> Right Switch
         
         if self.auto == 1:
-            if self.gyro.getAngle() <= 14:
-                self.drive.arcadeDrive(0.5,-0.4)
-            elif self.EC1.getDistance() <= 377: #cm
-                self.drive.arcadeDrive(0.6,0)
-            else:
+            if self.autoState == 0:
+                if self.gyro.getAngle() <= 14:
+                    self.drive.arcadeDrive(0.5,-0.4)
+                self.autoState = 1
+                self.EC1.reset()
+            if self.autoState == 1:
+                if self.EC1.getDistance() <= 377: #cm
+                    self.drive.arcadeDrive(0.6,0)
+                self.autoState = 2
+            if self.autoState == 2:
                 if self.EC4.getDistance() <= 831:
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
-                elif self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
+                self.autoState = 3
+            if self.autoState == 3:
+                if self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
                     self.goldenArrowhead.set(False)
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
         #Left -> Left Switch
         if self.auto == 2:
-            if self.gyro.getAngle() >= 0 and self.gyro.getAngle() <= 14:
-                self.drive.arcadeDrive(0.5,0.4)
-            elif self.EC1.getDistance() <= 377: #cm
-                self.drive.arcadeDrive(0.6,0)
-            else:
+            if self.autoState == 0:
+                if self.gyro.getAngle() >= 0 and self.gyro.getAngle() <= 14:
+                    self.drive.arcadeDrive(0.5,0.4)
+                    self.autoState = 1
+            if self.autoState == 1:
+                if self.EC1.getDistance() <= 377: #cm
+                    self.drive.arcadeDrive(0.6,0)
+                self.autoState = 2
+            if self.autoState == 2:
                 if self.EC4.getDistance() <= 831:
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
-                elif self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
+                    self.autoState = 3
+            if self.autoState == 3:
+                if self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
                     self.goldenArrowhead.set(False)
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
         #Middle -> Left Switch  
         if self.auto == 3:
-            if self.gyro.getAngle() >= -37 and self.gyro.getAngle() <= 0:
-                self.drive.arcadeDrive(0.5,-0.4)
+            if self.autoState == 0:
+                if self.gyro.getAngle() >= -37 and self.gyro.getAngle() <= 0:
+                    self.drive.arcadeDrive(0.5,-0.4)
+                self.autoState = 1
             elif self.EC1.getDistance() <= 456: #cm
                 self.drive.arcadeDrive(-0.6,0)
             elif self.gyro.getAngle() >= -37 and self.gyro.getAngle() <= 0:
@@ -288,9 +304,8 @@ class MyRobot(wpilib.IterativeRobot):
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
         #Left -> Right Switch
-        
         if self.auto == 5:
-            if self.gyro.getAngle() >=0 and self.gyro.getAngle() <= 60:
+            if self.gyro.getAngle() >= 0 and self.gyro.getAngle() <= 60:
                 self.drive.arcadeDrive(0.5,0.4)
             elif self.EC1.getDistance() <= 282: #cm, not accurate
                 self.drive.arcadeDrive(0.6,0)
@@ -306,19 +321,79 @@ class MyRobot(wpilib.IterativeRobot):
                     self.goldenArrowhead.set(False)
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
-                
-                
-            
-            
-            
-            
-            
-        
-        
         #Right -> Left Switch
+        if self.auto == 6:
+            if self.gyro.getAngle() >= -41 and self.gyro.getAngle() <= 0:
+                self.drive.arcadeDrive(0.5,-0.4)
+            elif self.EC1.getDistance() <= 282:
+                self.drive.arcadeDrive(0.6,0)
+            elif self.gyro.getAngle() >= -41 and self.gyro.getAngle() <= 0:
+                self.drive.arcadeDrive(0.5,0.4)
+            elif self.EC1.getDistance() <= 402 and self.EC1.getDistance() >= 282:
+                self.drive.arcadeDrive(0,6,0)
+            else:
+                if self.EC4.getDistance() <= 831: #shoulder
+                    self.S1.set(-0.25)
+                    self.S2.set(-0.25)
+                elif self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
+                    self.goldenArrowhead.set(False)
+                    self.S1.set(-0.25)
+                    self.S2.set(-0.25)
         #Left -> Left Scale
-        #Right -> Right Scale
-        #Left -> Right Scale
+        if self.auto == 7:
+            if self.gyro.getAngle() >= -5 and self.gyro.getAngle() <= 0:
+                self.drive.arcadeDrive(0.5,-0.4)
+            elif self.EC1.getDistance() <= 400: #cm
+                self.drive.arcadeDrive(0.6,0)
+            elif self.gyro.getAngle() >= -5 and self.gyro.getAngle() <= 0:
+                self.drive.arcadeDrive(0.5,0.4)
+            elif self.EC1.getDistance() <= 762: #cm
+                self.drive.arcadeDrive(0.6,0)
+            else:
+                if self.EC4.getDistance() <= 831: #shoulder
+                    self.S1.set(-0.25)
+                    self.S2.set(-0.25)
+                elif self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
+                    self.goldenArrowhead.set(False)
+                    self.S1.set(-0.25)
+                    self.S2.set(-0.25)
+         #Right -> Right Scale
+        if self.auto == 8:
+            if self.gyro.getAngle() >= 0 and self.gyro.getAngle() <= 5:
+                self.drive.arcadeDrive(0.5,0.4)
+            elif self.EC1.getDistance() <= 400: #cm
+                self.drive.arcadeDrive(0.6,0)
+            elif self.gyro.getAngle() >= 0 and self.gyro.getAngle() <= 5:
+                self.drive.arcadeDrive(0.5,-0.4)
+            elif self.EC1.getDistance() <= 762: #cm
+                self.drive.arcadeDrive(0.6,0)
+            else:
+                if self.EC4.getDistance() <= 831: #shoulder
+                    self.S1.set(-0.25)
+                    self.S2.set(-0.25)
+                elif self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
+                    self.goldenArrowhead.set(False)
+                    self.S1.set(-0.25)
+                    self.S2.set(-0.25)
+          #Left -> Right Scale  
+          
+          if self.auto == 9:
+              
+            
+            
+                
+                
+            
+            
+            
+            
+            
+        
+        
+        
+        
+        
+        
         #Right -> Left Scale
         
             
