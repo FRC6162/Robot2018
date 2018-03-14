@@ -19,34 +19,38 @@ class MyRobot(wpilib.IterativeRobot):
         This function is called upon program startup and
         should be used for any initialization code.
         """
-        #Initialize Networktables
+        #This initializes Networktables which will be used for communication between our robot and the GUI.
         self.sd = NetworkTables.getTable('SmartDashboard')
-        #Camera:
+        #This initializes the camera.
         wpilib.CameraServer.launch()
-        #Counters
+        #This sets some counters for the state machines. (FOR Previous version without the encoders)
         self.getCubeCounter = 0
         self.dropCubeCounter = 0
         self.elevatorDownCounter = 0
         self.elevatorUpCounter = 0
         self.cubeTravelUp = 50
         self.cubeTravelStop = 1
-        #Flags
-        self.prepareCubeFlag=0
-        self.grabCubeFlag=0
-        self.deliverCubeFlag=0
-
-        #Drive Factor - adjust controller responsiveness
+        #This sets some flags for the state machines.
+        self.prepareCubeFlag=0 #This is the flag for the state machine which makes the robot prepared to grab the cube.
+        self.grabCubeFlag=0 #This is the flag for the state machine which makes the robot grab the cube.
+        self.deliverCubeFlag=0 #This is the flag for the state machine which makes the robot deliver the cube.
+        self.state = 0
+        #This sets the Drive Factor, which adjusts controller responsiveness.
         self.driveFactor = 0.5
 
-        #Encoders - left and right, attached to gearbox
+        #This initializes the Encoders - left and right, attached to gearbox
         self.EC1 = wpilib.Encoder(4,5)
         self.EC2 = wpilib.Encoder(6,7)
+        
+        #Encoder for the elevator and shoulder
+        self.EC3 = wpilib.Encoder(6,7) #This sets the encoder for the elevator.
+        self.EC4 = wpilib.Encoder(8,9) #This sets the encoder for the arm.
 
-        # Pneumatics:
+        #This sets the Pneumatics.
         self.leftGearShift = wpilib.Solenoid(5,0)
         self.rightGearShift = wpilib.Solenoid(5,1)
         self.goldenArrowhead = wpilib.Solenoid(5,2) # Reference to Guyanese flag
-
+        #This controls the function of the arm.
         # Include limit switches for the elevator and shoulder mechanisms
         # 2018-2-16 Warning! The Switch's channel should be modified according to the robot! - Fixed
         self.SW0 = wpilib.DigitalInput(0) #Lower Elevator Switch
@@ -57,7 +61,7 @@ class MyRobot(wpilib.IterativeRobot):
         # Left Motor Group Setup
         self.M0 = ctre.wpi_talonsrx.WPI_TalonSRX(4)
         self.M1 = ctre.wpi_talonsrx.WPI_TalonSRX(3)
-        self.M0.setInverted(True)
+        self.M0.setInverted(True) #This inverts the motors.
         self.M1.setInverted(True)
         self.left = wpilib.SpeedControllerGroup(self.M0,self.M1)
 
@@ -75,33 +79,23 @@ class MyRobot(wpilib.IterativeRobot):
         self.timer = wpilib.Timer()
 
         # E = Elevator
-        self.E1 = wpilib.VictorSP(0)
-        self.E2 = wpilib.VictorSP(1)
+        self.E1 = wpilib.VictorSP(0) #This initializes the left elevator.
+        self.E2 = wpilib.VictorSP(1) #This initializes the right elevator.
         # Shoulder
-        self.S1 = wpilib.VictorSP(2)
-        self.S2 = wpilib.VictorSP(3)
+        self.S1 = wpilib.VictorSP(2) #This initializes the left shoulder.
+        self.S2 = wpilib.VictorSP(3) #This initializes the right shoulder.
         
         #Servo
-        self.SV1 = wpilib.Servo(4)
+        self.SV1 = wpilib.Servo(4) #This initializes a servo.
         #self.SV2 = wpilib.Servo(5)
         #self.SV1.set(0.0)
         #self.SV2.set(0.0)
         
         #Gyro
-        self.gyro = wpilib.ADXRS450_Gyro(0)
-        self.gyro.reset()
+        self.gyro = wpilib.ADXRS450_Gyro(0) #This initializes a gyro to detect the direction of the robot.
+        self.gyro.reset() #This resets the gyro.
         
-        #Encoder for the shoulder
-        self.EC3 = wpilib.Encoder(6,7)
-        self.EC4 = wpilib.Encoder(8,9)
-        #All possible autonomous routines in a sendable chooser
-        self.chooser = wpilib.SendableChooser()
-        self.chooser.addDefault("None", '4')
-        self.chooser.addObject("left-LeftScale", '1')
-        self.chooser.addObject("Middle-LeftScale", '2')
-        self.chooser.addObject("Right-LeftScale", '3')
-        self.chooser.addObject("Left-RightScale", '5')
-        wpilib.SmartDashboard.putData('Choice', self.chooser)
+        
     
 
 
@@ -113,7 +107,14 @@ class MyRobot(wpilib.IterativeRobot):
         #Example Start position 1 + scale: straight 3.5m turn 90 right forward 1.0m deliver cube
         self.timer.reset()
         self.timer.start()
-        self.autoState = 0
+        self.goldenArrowhead.set(True)
+        self.auto = self.sd.getNumber("auto",0) 
+        self.colours = wpilib.DriverStation.getGameSpecificMessage()
+        self.ourSwitch = self.colours[0]
+        self.scale = self.colours[1]
+        self.theirSwitch = self.colours[2]
+        #self.allianceColour = wpilib.DriverStation.getAlliance()
+        #***************** GOLDEN ARROWHEAD = TRUE!!!!! *****************
         #self.auto = self.chooser.getSelected()
         '''
         self.cumulativeTime=0
@@ -151,114 +152,49 @@ class MyRobot(wpilib.IterativeRobot):
             else:
                 self.drive.arcadeDrive(0,0)
         '''       
-        # Drive for two seconds
-        '''
-        if self.leftEncoder.getDistance() <= 1.0:
-            self.drive.arcadeDrive(-0.5, 0)
-        else:
-            self.drive.arcadeDrive(0,0)
-        '''
-        '''
-        Place the robot forward
-        #Right -> Right Switch
-        if self.auto == 1:
-            if self.EC1.getDistance() <= 366: #cm
-                self.drive.arcadeDrive(-0.6,0)
-            elif self.gyro.getAngle() <= 90:
-                self.drive.arcadeDrive(0.5,0.4)
-            else:
-                if self.EC4.getDistance() <= 831:
-                    self.S1.set(-0.25)
-                    self.S2.set(-0.25)
-                elif self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
-                    self.goldenArrowhead.set(False)
-                    self.S1.set(-0.25)
-                    self.S2.set(-0.25)
-        #Left -> Left Switch
-        if self.auto == 2:
-            if self.EC1.getDistance() <= 366:
-                self.drive.arcadeDrive(-0.6,0)
-            elif self.gyro.getAngle() >= -90 and self.gyro.getAngle() <= 0:
-                self.drive.arcadeDrive(0.5,-0.4)
-            else:
-                if self.EC4.getDistance() <= 831:
-                    self.S1.set(-0.25)
-                    self.S2.set(-0.25)
-                elif self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
-                    self.goldenArrowhead.set(False)
-                    self.S1.set(-0.25)
-                    self.S2.set(-0.25)
-        #Middle -> Left Switch  
-        if self.auto == 3:
-            if self.gyro.getAngle() >= -37 and self.gyro.getAngle() <= 0:
-                self.drive.arcadeDrive(0.5,-0.4)
-            elif self.EC1.getDistance() <= 456: #cm
-                self.drive.arcadeDrive(-0.6,0)
-            elif self.gyro.getAngle() >= -180 and self.gyro.getAngle() <= -37:
-                self.drive.arcadeDrive(0.5,-0.4)
-            else: 
-                if self.EC4.getDistance() <= 831: #shoulder
-                    self.S1.set(-0.25)
-                    self.S2.set(-0.25)
-                elif self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
-                    self.goldenArrowhead.set(False)
-                    self.S1.set(-0.25)
-                    self.S2.set(-0.25)
-        #Middle -> Right Switch
-        if self.auto == 4:
-            if self.gyro.getAngle() >= 0 and self.gyro.getAngle() <= 14:
-                self.drive.arcadeDrive(0.5,0.4)
-            elif self.EC1.getDistance() <= 375: #cm
-                self.drive.arcadeDrive(-0.6,0)
-            elif self.gyro.getAngle() >= -180 and self.gyro.getAngle() <= -14:
-                self.drive.arcadeDrive(0.5,-0.4)
-            else: 
-                if self.EC4.getDistance() <= 831: #shoulder
-                    self.S1.set(-0.25)
-                    self.S2.set(-0.25)
-                elif self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
-                    self.goldenArrowhead.set(False)
-                    self.S1.set(-0.25)
-                    self.S2.set(-0.25)
-        #Left -> Right Switch
-        if self.auto == 5:
-            if self.gyro.getAngle() >=0 and self.gyro.getAngle() <= 60:
-                self.drive.arcadeDrive(0.5,0.4)
-            elif self.EC1.getDistance() <= 
-        '''
         #Turning: clockwise-positive, counterclockwise - negative
         #Gyro: clockwise - positive; counterclockwise - negative
         #Place the robot backwards
         #Right -> Right Switch
         if self.auto == 1:
             if self.autoState == 0:
-                if self.gyro.getAngle() <= 14 and self.gyro.getAngle() >= 0: #-1 - slight fluctuation
+                if self.gyro.getAngle() <= 14 and self.gyro.getAngle() >= 0: #Turn counterclockwise for 14 degrees.
                     self.drive.arcadeDrive(0.5,-0.7)
                 else:
                     self.autoState = 1
                     self.EC1.reset()
             if self.autoState == 1:
-                if self.EC1.getDistance() <= 377 and self.EC1.getDistance() >= 0: #cm
+                if self.EC1.getDistance() <= 377 and self.EC1.getDistance() >= 0: #Go forward for 377 cm.
                     self.drive.arcadeDrive(0.6,0)
                 else:
                     self.autoState = 2
+            #This part makes the robot place the cube onto the switch or scale.
             if self.autoState == 2:
-                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0: 
+                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0:  
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
                 else:
                     self.autoState = 3
             if self.autoState == 3:
+                self.goldenArrowhead.set(False)
+                self.autoState = 4
+            if self.autoState == 4:
                 if self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
-                    self.goldenArrowhead.set(False)
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
                 else:
-                    self.autoState = 4
+                    self.autoState = 5
+            if self.autoState == 5:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                    self.S1.set(0.25)
+                    self.S2.set(0.25)
+                else:
+                    self.autoState = 6
+            #Take arms back to rest position
         #Left -> Left Switch
         if self.auto == 2:
             if self.autoState == 0:
-                if self.gyro.getAngle() >= 0 and self.gyro.getAngle() <= 9: #-1 - slight fluctuation
+                if self.gyro.getAngle() >= -10 and self.gyro.getAngle() <= 9: #-1 - slight fluctuation
                     self.drive.arcadeDrive(0.5,0.7)
                 else:
                     self.autoState = 1
@@ -269,18 +205,27 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 2
             if self.autoState == 2:
-                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0:
+                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0:  
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
                 else:
                     self.autoState = 3
             if self.autoState == 3:
+                self.goldenArrowhead.set(False)
+                self.autoState = 4
+            if self.autoState == 4:
                 if self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
-                    self.goldenArrowhead.set(False)
                     self.S1.set(-0.25)
-                    self.S2.set(-0.25)  
+                    self.S2.set(-0.25)
                 else:
-                    self.autoState = 4
+                    self.autoState = 5
+            if self.autoState == 5:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                    self.S1.set(0.25)
+                    self.S2.set(0.25)
+                else:
+                    self.autoState = 6
+            #Take arms back - set auto state to 0 (or go get another cube????)
         #Middle -> Left Switch  
         if self.auto == 3:
             if self.autoState == 0:
@@ -303,18 +248,27 @@ class MyRobot(wpilib.IterativeRobot):
                     self.autoState = 3
             '''
             if self.autoState == 2:
-                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0: #shoulder
+                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0:  
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
                 else:
                     self.autoState = 3
             if self.autoState == 3:
+                self.goldenArrowhead.set(False)
+                self.autoState = 4
+            if self.autoState == 4:
                 if self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
-                    self.goldenArrowhead.set(False)
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
                 else:
-                    self.autoState = 4
+                    self.autoState = 5
+            if self.autoState == 5:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                    self.S1.set(0.25)
+                    self.S2.set(0.25)
+                else:
+                    self.autoState = 6
+            #Arms back....
             
             
         #Middle -> Right Switch
@@ -342,12 +296,26 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 4
             if self.autoState == 4:
-                if self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
-                    self.goldenArrowhead.set(False)
+                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0:  
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
                 else:
                     self.autoState = 5
+            if self.autoState == 5:
+                self.goldenArrowhead.set(False)
+                self.autoState = 6
+            if self.autoState == 6:
+                if self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
+                    self.S1.set(-0.25)
+                    self.S2.set(-0.25)
+                else:
+                    self.autoState = 7
+            if self.autoState == 7:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                    self.S1.set(0.25)
+                    self.S2.set(0.25)
+                else:
+                    self.autoState = 8
         
         #Left -> Right Switch
         if self.auto == 5:
@@ -374,18 +342,26 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 4
             if self.autoState == 4:
-                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0: #shoulder
+                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0:  
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
                 else:
                     self.autoState = 5
             if self.autoState == 5:
+                self.goldenArrowhead.set(False)
+                self.autoState = 6
+            if self.autoState == 6:
                 if self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
-                    self.goldenArrowhead.set(False)
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
                 else:
-                    self.autoState = 6
+                    self.autoState = 7
+            if self.autoState == 7:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                    self.S1.set(0.25)
+                    self.S2.set(0.25)
+                else:
+                    self.autoState = 8
         #Right -> Left Switch
         if self.auto == 6:
             if self.autoState == 0:
@@ -411,20 +387,29 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 4
             if self.autoState == 4:
-                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0: #shoulder
+                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0:  
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
                 else:
                     self.autoState = 5
             if self.autoState == 5:
+                self.goldenArrowhead.set(False)
+                self.autoState = 6
+            if self.autoState == 6:
                 if self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
-                    self.goldenArrowhead.set(False)
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
                 else:
-                    self.autoState = 6
-        #Left -> Left Scale
+                    self.autoState = 7
+            if self.autoState == 7:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                    self.S1.set(0.25)
+                    self.S2.set(0.25)
+                else:
+                    self.autoState = 8
+        
         '''
+        initial route
         if self.auto == 7:
             if self.autoState == 0: #Turn 5 degrees
                 if self.gyro.getAngle() >= -5 and self.gyro.getAngle() <= 0:
@@ -462,6 +447,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 6  #See you later
         '''
+        #Left -> Left Scale
         if self.auto == 7:
             if self.autoState == 0: #Turn 5 degrees
                 if self.EC1.getDistance() <= 488:
@@ -480,20 +466,28 @@ class MyRobot(wpilib.IterativeRobot):
                     self.drive.arcadeDrive(0.6,0)
                 else:
                     self.autoState = 3
-            if self.autoState == 3: #Time to deliver cube - arms up
-                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0: #shoulder
+            if self.autoState == 3:
+                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0:  
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
                 else:
                     self.autoState = 4
-            if self.autoState == 4: #Release!
+            if self.autoState == 4:
+                self.goldenArrowhead.set(False)
+                self.autoState = 5
+            if self.autoState == 5:
                 if self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
-                    self.goldenArrowhead.set(False)
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
                 else:
-                    self.autoState = 5  #See you later
-         #Right -> Right Scale
+                    self.autoState = 6
+            if self.autoState == 6:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                    self.S1.set(0.25)
+                    self.S2.set(0.25)
+                else:
+                    self.autoState = 7  #Arms Down, Go for next cube.....then...See you later
+        #Right -> Right Scale
         if self.auto == 8:
             if self.autoState == 0: #Turn 5 degrees
                 if self.EC1.getDistance() <= 488:
@@ -512,26 +506,138 @@ class MyRobot(wpilib.IterativeRobot):
                     self.drive.arcadeDrive(0.6,0)
                 else:
                     self.autoState = 3
-            if self.autoState == 3: #Time to deliver cube - arms up
-                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0: #shoulder
+            if self.autoState == 3:
+                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0:  
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
                 else:
                     self.autoState = 4
-            if self.autoState == 4: #Release!
+            if self.autoState == 4:
+                self.goldenArrowhead.set(False)
+                self.autoState = 5
+            if self.autoState == 5:
                 if self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
-                    self.goldenArrowhead.set(False)
                     self.S1.set(-0.25)
                     self.S2.set(-0.25)
                 else:
-                    self.autoState = 5  #See you later
-              
+                    self.autoState = 6
+            if self.autoState == 6:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                    self.S1.set(0.25)
+                    self.S2.set(0.25)
+                else:
+                    self.autoState = 7  #See you later
+        #left -> Right Scale
+        if self.auto == 9:
+            if self.autoState == 0:
+                if self.EC1.getDistance() <= 569:
+                    self.drive.arcadeDrive(0.6,0)
+                else:
+                    self.autoState = 1
+                    self.EC1.reset()
+            if self.autoState == 1:
+                if self.gyro.getAngle() <= 90 and self.gyro.getAngle() >= 0:
+                    self.drive.arcadeDrive(0.5,0.7)
+                else:
+                    self.autoState = 2
+                    self.EC1.reset()
+            if self.autoState == 2:
+                if self.EC1.getDistance() <= 640 and self.EC1.getDistance() >= 0:
+                    self.drive.arcadeDrive(0.6,0)
+                else:
+                    self.autoState = 3
+                    self.EC1.reset()
+            if self.autoState == 3:
+                if self.gyro.getAngle() <= 90 and self.gyro.getAngle() >= 0:
+                    self.drive.arcadeDrive(0.5,-0.7)
+                else:
+                    self.autoState = 4
+                    self.EC1.reset()
+            if self.autoState == 4:
+                if self.EC1.getDistance() <= 60 and self.EC1.getDistance() >= 0:
+                    self.drive.arcadeDrive(0.6,0)
+                else:
+                    self.autoState = 5
+            if self.autoState == 5:
+                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0:  
+                    self.S1.set(-0.25)
+                    self.S2.set(-0.25)
+                else:
+                    self.autoState = 6
+            if self.autoState == 6:
+                self.goldenArrowhead.set(False)
+                self.autoState = 7
+            if self.autoState == 7:
+                if self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
+                    self.S1.set(-0.25)
+                    self.S2.set(-0.25)
+                else:
+                    self.autoState = 8
+            if self.autoState == 8:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                    self.S1.set(0.25)
+                    self.S2.set(0.25)
+                else:
+                    self.autoState = 9 #See you later
+
+        #Right -> Left Scale
+        if self.auto == 10:
+            if self.autoState == 0:
+                if self.EC1.getDistance() <= 569:
+                    self.drive.arcadeDrive(0.6,0)
+                else:
+                    self.autoState = 1
+                    self.EC1.reset()
+            if self.autoState == 1:
+                if self.gyro.getAngle() <= 90 and self.gyro.getAngle() >= 0:
+                    self.drive.arcadeDrive(0.5,-0.7)
+                else:
+                    self.autoState = 2
+                    self.EC1.reset()
+            if self.autoState == 2:
+                if self.EC1.getDistance() <= 640 and self.EC1.getDistance() >= 0:
+                    self.drive.arcadeDrive(0.6,0)
+                else:
+                    self.autoState = 3
+                    self.EC1.reset()
+            if self.autoState == 3:
+                if self.gyro.getAngle() <= 90 and self.gyro.getAngle() >= 0:
+                    self.drive.arcadeDrive(0.5,0.7)
+                else:
+                    self.autoState = 4
+                    self.EC1.reset()
+            if self.autoState == 4:
+                if self.EC1.getDistance() <= 60 and self.EC1.getDistance() >= 0:
+                    self.drive.arcadeDrive(0.6,0)
+                else:
+                    self.autoState = 5
+            if self.autoState == 5:
+                if self.EC4.getDistance() <= 831 and self.EC4.getDistance() >= 0:  
+                    self.S1.set(-0.25)
+                    self.S2.set(-0.25)
+                else:
+                    self.autoState = 6
+            if self.autoState == 6:
+                self.goldenArrowhead.set(False)
+                self.autoState = 7
+            if self.autoState == 7:
+                if self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
+                    self.S1.set(-0.25)
+                    self.S2.set(-0.25)
+                else:
+                    self.autoState = 8
+            if self.autoState == 8:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                    self.S1.set(0.25)
+                    self.S2.set(0.25)
+                else:
+                    self.autoState = 9 #See you later           
+                    
+                    
+            
+            
         #left -> Right Scale 
         #Right -> Left Scale
-        
-            
-            
-        #place your code here
         #self.EC1.getRate() - Get the current rate of the encoder. Units are distance per second as scaled by the value from setDistancePerPulse().
         
     def teleopPeriodic(self):
@@ -548,12 +654,14 @@ class MyRobot(wpilib.IterativeRobot):
         # Elevator
         # 2018-2-16 Warning! The Switch number should be modified accroding to the robot! - Fixed
         '''
-        if self.stick.getRawButton(1) == True: # & self.SW0.get() == False & self.SW1.get() == False:
-            self.E1.set(1)
-            self.E2.set(-1)
-        elif self.stick.getRawButton(2) == True: #& self.SW2.get() == False & self.SW3.get() == False:
-            self.E1.set(-1)
-            self.E2.set(1)
+        WITHOUT STATE MACHINES
+        #ELevator
+        if self.stick.getRawButton(1) == True: 
+            self.E1.set(0.5)
+            self.E2.set(-0.5)
+        elif self.stick.getRawButton(2) == True: 
+            self.E1.set(-0.5)
+            self.E2.set(0.5)
         else:
             self.E1.set(0)
             self.E2.set(0)
@@ -574,17 +682,20 @@ class MyRobot(wpilib.IterativeRobot):
 	#Powercube collector - "Golden Arrowhead"
         if self.stick.getRawButton(1) == True:
             self.prepareCubeFlag = 1
-            self.EC3.set(0)
+            self.state = 1
+            self.EC3.reset()
         if self.prepareCubeFlag > 0:
             self.prepareGrabCube()
         if self.stick.getRawButton(2) == True:
             self.grabCubeFlag = 1
-            self.EC3.set(0)
+            self.state = 1  
+            self.EC3.reset()
         if self.grabCubeFlag > 0:
             self.grabCube()
         if self.stick.getRawButton(3) == True:
             self.deliverCubeFlag = 1
-            self.EC4.set(0)
+            self.state = 1
+            self.EC4.reset()
         if self.deliverCubeFlag > 0:   
             self.deliverCube()
             
@@ -622,7 +733,7 @@ class MyRobot(wpilib.IterativeRobot):
             self.E2.set(0.3)
     
         #Dashboard
-        self.sd.putNumber('Speed', 0.5)
+        #self.sd.putNumber('Speed', 0.5)
         self.sd.putNumber('Gyro',self.gyro.getAngle())
         #self.sd.putValue("Camera", self.camera)
         self.sd.putValue("SW1", self.SW1.get())
@@ -630,10 +741,12 @@ class MyRobot(wpilib.IterativeRobot):
     def prepareGrabCube(self):
     #(1)Check that the lower elevator switch is on - elevator at bottom
 	#(2)If not, move elevator to bottom (and arms to bottom)
-        if self.EC1.getDistance() <= 30720:
-            self.E1.set(0.5)
-            self.E2.set(-0.5)
-        else:
+        if self.state == 1:
+            if self.EC3.getDistance() <= 30720:
+                self.E1.set(0.5)
+                self.E2.set(-0.5)
+            self.state = 2
+        if self.state == 2:
             self.E1.set(0)
             self.E2.set(0)
             self.prepareCubeFlag = 0
@@ -641,24 +754,35 @@ class MyRobot(wpilib.IterativeRobot):
     def grabCube(self):
     #(1)Grab cube
     #(2) Move cube up until it hits the top (or part way up????)
-        self.goldenArrowhead.set(True) #Grabs the cube(not sure it is True or False)
-        if self.EC3.getDistance() >= -30720 and self.EC3.getDistance() <= 0:
-            self.E1.set(-0.5)
-            self.E2.set(0.5)
-        else:
+        if self.state == 1:
+            self.goldenArrowhead.set(True)
+            self.state = 2
+            #Grabs the cube(not sure it is True or False)
+        if self.state == 2:
+            if self.EC3.getDistance() >= -30720 and self.EC3.getDistance() <= 0:
+                self.E1.set(-0.5)
+                self.E2.set(0.5)
+            self.state = 3
+        if self.state == 3:
             self.E1.set(0)
             self.E2.set(0)
             self.grabCubeFlag = 0
     
     def deliverCube(self):
-        if self.EC4.getDistance() <= 831:
-            self.S1.set(-0.25)
-            self.S2.set(-0.25)
-        elif self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
+        if self.state == 1:
+            if self.EC4.getDistance() <= 831:
+                self.S1.set(-0.25)
+                self.S2.set(-0.25)
+            self.state = 2
+        if self.state == 2:
             self.goldenArrowhead.set(False)
-            self.S1.set(-0.25)
-            self.S2.set(-0.25)
-        else:
+            self.state = 3
+        if self.state == 3:
+            if self.EC4.getDistance() >= 831 and self.EC4.getDistance() <= 887:
+                self.S1.set(-0.25)
+                self.S2.set(-0.25)
+            self.state = 4
+        if self.state == 4:
             self.deliverCubeFlag=0
             
     
