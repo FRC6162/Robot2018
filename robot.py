@@ -743,15 +743,28 @@ class MyRobot(wpilib.IterativeRobot):
             self.goldenArrowhead.set(True)
         elif self.stick.getRawButton(6)==True:
             self.goldenArrowhead.set(False)
-        
+        #Moving up the elevators
+        if self.stick.getRawButton(4) == True:
+            self.E1.set(-0.5)
+            self.E2.set(0.5)
         #Shift Gears
+        '''
         if self.stick.getRawButton(7)==True:
             self.leftGearShift.set(True)
             self.rightGearShift.set(True)
         elif self.stick.getRawButton(8)==True:
             self.leftGearShift.set(False)
             self.rightGearShift.set(False)
-        #Climbing
+        '''
+        #Moves up the arm to release the cube
+        if self.stick.getRawButton(7)==True:
+            self.S1.set(-0.25)
+            self.S2.set(-0.25)
+        #Moves down the arm
+        elif self.stick.getRawButton(8)==True:
+            self.S1.set(0.25)
+            self.S2.set(0.25)
+        #Climbing - moving down the elevators
         if self.stick.getRawButton(9) == True:
             self.E1.set(0.5)
             self.E2.set(-0.5)
