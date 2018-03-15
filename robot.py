@@ -95,6 +95,8 @@ class MyRobot(wpilib.IterativeRobot):
         self.gyro.reset() #This resets the gyro.
         
         
+        
+        
     
 
 
@@ -757,15 +759,21 @@ class MyRobot(wpilib.IterativeRobot):
             self.rightGearShift.set(False)
         '''
         #Moves up the arm to release the cube
-        if self.stick.getRawButton(7)==True:
+        if self.stick.getRawButton(7)==True and self.EC3.getDistance() >= -100 and self.EC3.getDistance() <= 100:
             self.S1.set(-0.25)
             self.S2.set(-0.25)
+            #Triggers for the arm
+            self.S1.set(-(self.stick.getRawAxis(2)*0.75+0.25))
+            self.S2.set(-(self.stick.getRawAxis(2)*0.75+0.25))
         #Moves down the arm
-        elif self.stick.getRawButton(8)==True:
-            self.S1.set(0.25)
-            self.S2.set(0.25)
+        elif self.stick.getRawButton(8)==True and self.EC3.getDistance() >= -100 and self.EC3.getDistance() <= 100:
+            self.S1.set(-0.25)
+            self.S2.set(-0.25)
+            #Triggers for the arm
+            self.S1.set(self.stick.getRawAxis(2)*0.75+0.25)
+            self.S2.set(self.stick.getRawAxis(2)*0.75+0.25)
         #Climbing - moving down the elevators
-        if self.stick.getRawButton(9) == True:
+        if self.stick.getRawButton(10) == True:
             self.E1.set(0.5)
             self.E2.set(-0.5)
             
@@ -783,13 +791,21 @@ class MyRobot(wpilib.IterativeRobot):
         #Adjust right elevators
         if self.stick.getPOV()==270:
             self.E2.set(0.3)
-    
+            
+        
+        
+        
         #Dashboard
         #self.sd.putNumber('Speed', 0.5)
         self.sd.putNumber('Gyro',self.gyro.getAngle())
         #self.sd.putValue("Camera", self.camera)
         self.sd.putValue("SW1", self.SW1.get())
         self.sd.putValue("SW0", self.SW0.get())
+    
+    def speedUpArm(self):
+        self.S1.set(self.S1.get()*6/10+0.4) 
+        self.S2.set(self.S2.get()*6/10+0.4)
+        
     def prepareGrabCube(self):
     #(1)Check that the lower elevator switch is on - elevator at bottom
 	#(2)If not, move elevator to bottom (and arms to bottom)
