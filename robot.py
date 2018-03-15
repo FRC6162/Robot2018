@@ -1,5 +1,4 @@
 
-
 #!/usr/bin/en5v python3
 """
     This is a good foundation to build your robot code on
@@ -158,8 +157,8 @@ class MyRobot(wpilib.IterativeRobot):
         #Right -> Right Switch
         if self.auto == 1:
             if self.autoState == 0:
-                if self.gyro.getAngle() <= 14 and self.gyro.getAngle() >= 0: #Turn counterclockwise for 14 degrees.
-                    self.drive.arcadeDrive(0.5,-0.7)
+                if self.gyro.getAngle() >= -14 and self.gyro.getAngle() <= 10: #Turn counterclockwise for 14 degrees. The value from the gyro will fluctuate.
+                    self.drive.arcadeDrive(0.5,-0.7) 
                 else:
                     self.autoState = 1
                     self.EC1.reset()
@@ -185,7 +184,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 5
             if self.autoState == 5:
-                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 900:
                     self.S1.set(0.25)
                     self.S2.set(0.25)
                 else:
@@ -194,7 +193,7 @@ class MyRobot(wpilib.IterativeRobot):
         #Left -> Left Switch
         if self.auto == 2:
             if self.autoState == 0:
-                if self.gyro.getAngle() >= -10 and self.gyro.getAngle() <= 9: #-1 - slight fluctuation
+                if self.gyro.getAngle() >= -10 and self.gyro.getAngle() <= 9: 
                     self.drive.arcadeDrive(0.5,0.7)
                 else:
                     self.autoState = 1
@@ -220,7 +219,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 5
             if self.autoState == 5:
-                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 900:
                     self.S1.set(0.25)
                     self.S2.set(0.25)
                 else:
@@ -229,7 +228,7 @@ class MyRobot(wpilib.IterativeRobot):
         #Middle -> Left Switch  
         if self.auto == 3:
             if self.autoState == 0:
-                if self.gyro.getAngle() >= -12 and self.gyro.getAngle() <= 0: #-1 - slight fluctuation
+                if self.gyro.getAngle() >= -12 and self.gyro.getAngle() <= 10: 
                     self.drive.arcadeDrive(0.5,-0.7)
                 else:
                     self.autoState = 1
@@ -263,7 +262,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 5
             if self.autoState == 5:
-                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 900:
                     self.S1.set(0.25)
                     self.S2.set(0.25)
                 else:
@@ -274,7 +273,7 @@ class MyRobot(wpilib.IterativeRobot):
         #Middle -> Right Switch
         if self.auto == 4:
             if self.autoState == 0:
-                if self.gyro.getAngle() >= 0 and self.gyro.getAngle() <= 22:
+                if self.gyro.getAngle() >= -10 and self.gyro.getAngle() <= 22:
                     self.drive.arcadeDrive(0.5,0.7)
                 else:
                     self.autoState = 1
@@ -285,7 +284,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 2
             if self.autoState == 2:
-                if self.gyro.getAngle() >= 0 and self.gyro.getAngle() <= 22:
+                if self.gyro.getAngle() >= -22 and self.gyro.getAngle() <= 10:
                     self.drive.arcadeDrive(0.5,-0.7)
                 else:
                     self.autoState = 3
@@ -311,7 +310,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 7
             if self.autoState == 7:
-                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 900:
                     self.S1.set(0.25)
                     self.S2.set(0.25)
                 else:
@@ -320,7 +319,7 @@ class MyRobot(wpilib.IterativeRobot):
         #Left -> Right Switch
         if self.auto == 5:
             if self.autoState == 0:
-                if self.gyro.getAngle() >= 0 and self.gyro.getAngle() <= 56:
+                if self.gyro.getAngle() >= -10 and self.gyro.getAngle() <= 56:
                     self.drive.arcadeDrive(0.5,0.7)
                 else:
                     self.autoState = 1
@@ -331,7 +330,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 2
             if self.autoState == 2:
-                if self.gyro.getAngle() >= 0 and self.gyro.getAngle() <= 56:
+                if self.gyro.getAngle() >= 0 and self.gyro.getAngle() <= 60:
                     self.drive.arcadeDrive(0.5,-0.7)
                 else:
                     self.autoState = 3
@@ -357,7 +356,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 7
             if self.autoState == 7:
-                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 900:
                     self.S1.set(0.25)
                     self.S2.set(0.25)
                 else:
@@ -365,7 +364,7 @@ class MyRobot(wpilib.IterativeRobot):
         #Right -> Left Switch
         if self.auto == 6:
             if self.autoState == 0:
-                if self.gyro.getAngle() >= -54 and self.gyro.getAngle() <= 0:
+                if self.gyro.getAngle() >= -54 and self.gyro.getAngle() <= 10:
                     self.drive.arcadeDrive(0.5,-0.7)
                 else:
                     self.autoState = 1
@@ -376,7 +375,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 2 
             if self.autoState == 2:
-                if self.gyro.getAngle() >= -54 and self.gyro.getAngle() <= 0:
+                if self.gyro.getAngle() >= -60 and self.gyro.getAngle() <= 0:
                     self.drive.arcadeDrive(0.5,0.7)
                 else:
                     self.autoState = 3
@@ -402,7 +401,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 7
             if self.autoState == 7:
-                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 900:
                     self.S1.set(0.25)
                     self.S2.set(0.25)
                 else:
@@ -456,7 +455,7 @@ class MyRobot(wpilib.IterativeRobot):
                     self.autoState = 1
                     self.EC1.reset()
             if self.autoState == 1: #Drive 4m
-                if self.gyro.getAngle() >= 0 and self.gyro.getAngle() <= 28:
+                if self.gyro.getAngle() >= -10 and self.gyro.getAngle() <= 28:
                     self.drive.arcadeDrive(0.5,0.7)
                 else:
                     self.autoState = 2
@@ -482,7 +481,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 6
             if self.autoState == 6:
-                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 900:
                     self.S1.set(0.25)
                     self.S2.set(0.25)
                 else:
@@ -496,7 +495,7 @@ class MyRobot(wpilib.IterativeRobot):
                     self.autoState = 1
                     self.EC1.reset()
             if self.autoState == 1: #Drive 4m
-                if self.gyro.getAngle() >= 0 and self.gyro.getAngle() <= 28:
+                if self.gyro.getAngle() >= -28 and self.gyro.getAngle() <= 10:
                     self.drive.arcadeDrive(0.5,-0.7)
                 else:
                     self.autoState = 2
@@ -522,7 +521,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 6
             if self.autoState == 6:
-                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 900:
                     self.S1.set(0.25)
                     self.S2.set(0.25)
                 else:
@@ -530,13 +529,13 @@ class MyRobot(wpilib.IterativeRobot):
         #left -> Right Scale
         if self.auto == 9:
             if self.autoState == 0:
-                if self.EC1.getDistance() <= 569:
+                if self.EC1.getDistance() <= 589:
                     self.drive.arcadeDrive(0.6,0)
                 else:
                     self.autoState = 1
                     self.EC1.reset()
             if self.autoState == 1:
-                if self.gyro.getAngle() <= 90 and self.gyro.getAngle() >= 0:
+                if self.gyro.getAngle() <= 90 and self.gyro.getAngle() >= -10:
                     self.drive.arcadeDrive(0.5,0.7)
                 else:
                     self.autoState = 2
@@ -548,13 +547,13 @@ class MyRobot(wpilib.IterativeRobot):
                     self.autoState = 3
                     self.EC1.reset()
             if self.autoState == 3:
-                if self.gyro.getAngle() <= 90 and self.gyro.getAngle() >= 0:
+                if self.gyro.getAngle() <= 95 and self.gyro.getAngle() >= 0:
                     self.drive.arcadeDrive(0.5,-0.7)
                 else:
                     self.autoState = 4
                     self.EC1.reset()
             if self.autoState == 4:
-                if self.EC1.getDistance() <= 60 and self.EC1.getDistance() >= 0:
+                if self.EC1.getDistance() <= 174 and self.EC1.getDistance() >= 0:
                     self.drive.arcadeDrive(0.6,0)
                 else:
                     self.autoState = 5
@@ -574,7 +573,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 8
             if self.autoState == 8:
-                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 900:
                     self.S1.set(0.25)
                     self.S2.set(0.25)
                 else:
@@ -583,13 +582,13 @@ class MyRobot(wpilib.IterativeRobot):
         #Right -> Left Scale
         if self.auto == 10:
             if self.autoState == 0:
-                if self.EC1.getDistance() <= 569:
+                if self.EC1.getDistance() <= 589:
                     self.drive.arcadeDrive(0.6,0)
                 else:
                     self.autoState = 1
                     self.EC1.reset()
             if self.autoState == 1:
-                if self.gyro.getAngle() <= 90 and self.gyro.getAngle() >= 0:
+                if self.gyro.getAngle() <= 10 and self.gyro.getAngle() >= -90:
                     self.drive.arcadeDrive(0.5,-0.7)
                 else:
                     self.autoState = 2
@@ -601,13 +600,13 @@ class MyRobot(wpilib.IterativeRobot):
                     self.autoState = 3
                     self.EC1.reset()
             if self.autoState == 3:
-                if self.gyro.getAngle() <= 90 and self.gyro.getAngle() >= 0:
+                if self.gyro.getAngle() <= 0 and self.gyro.getAngle() >= -95:
                     self.drive.arcadeDrive(0.5,0.7)
                 else:
                     self.autoState = 4
                     self.EC1.reset()
             if self.autoState == 4:
-                if self.EC1.getDistance() <= 60 and self.EC1.getDistance() >= 0:
+                if self.EC1.getDistance() <= 174 and self.EC1.getDistance() >= 0:
                     self.drive.arcadeDrive(0.6,0)
                 else:
                     self.autoState = 5
@@ -627,7 +626,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.autoState = 8
             if self.autoState == 8:
-                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 887:
+                if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 900:
                     self.S1.set(0.25)
                     self.S2.set(0.25)
                 else:
@@ -727,7 +726,6 @@ class MyRobot(wpilib.IterativeRobot):
         #Adjust left elevators
         if self.stick.getPOV()==90:
             self.E1.set(-0.3)
-        
         #Adjust right elevators
         if self.stick.getPOV()==270:
             self.E2.set(0.3)
@@ -783,6 +781,9 @@ class MyRobot(wpilib.IterativeRobot):
                 self.S2.set(-0.25)
             self.state = 4
         if self.state == 4:
+            if self.EC4.getDistance() >= 0 and self.EC4.getDistance() <= 900:
+                self.S1.set(0.25)
+                self.S2.set(0.25)
             self.deliverCubeFlag=0
             
     
