@@ -107,11 +107,52 @@ class MyRobot(wpilib.IterativeRobot):
         self.timer.reset()
         self.timer.start()
         self.goldenArrowhead.set(True)
-        self.auto = self.sd.getNumber("auto",0) 
+        #self.auto = self.sd.getNumber("auto",0) 
+        self.target = self.sd.getNumber("target",0) #Scale or Switch (value:1-switch or 2-scale)
+        self.startP = self.sd.getNumber("startP",0) #left-1 middle-2 right-3
         self.colours = wpilib.DriverStation.getGameSpecificMessage()
         self.ourSwitch = self.colours[0]
         self.scale = self.colours[1]
         self.theirSwitch = self.colours[2]
+        #Determines autonomous modes
+        if self.startP == 1:
+            if self.target == 1:
+                if self.ourSwitch == "L":
+                    self.auto = 2
+                else:
+                    self.auto = 5
+            elif self.target == 2:
+                if self.ourSwitch == "L":
+                    self.auto = 7
+                else:
+                    self.auto = 9
+        if self.startP == 2:
+            if self.target == 1:
+                if self.ourSwitch == "L":
+                    self.auto = 3
+                else:
+                    self.auto = 4
+            elif self.target == 2:
+                if self.ourSwitch == "L":
+                    self.auto = 0
+                else:
+                    self.auto = 0
+        if self.startP == 3:
+            if self.target == 1:
+                if self.ourSwitch == "L":
+                    self.auto = 6
+                else:
+                    self.auto = 1
+            elif self.target == 2:
+                if self.ourSwitch == "L":
+                    self.auto = 10
+                else:
+                    self.auto = 8
+           
+            
+                
+                
+                
         #self.allianceColour = wpilib.DriverStation.getAlliance()
         #***************** GOLDEN ARROWHEAD = TRUE!!!!! *****************
         #self.auto = self.chooser.getSelected()
