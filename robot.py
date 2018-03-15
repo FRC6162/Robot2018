@@ -122,7 +122,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.auto = 5
             elif self.target == 2:
-                if self.ourSwitch == "L":
+                if self.scale == "L":
                     self.auto = 7
                 else:
                     self.auto = 9
@@ -133,7 +133,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.auto = 4
             elif self.target == 2:
-                if self.ourSwitch == "L":
+                if self.scale == "L":
                     self.auto = 0
                 else:
                     self.auto = 0
@@ -144,7 +144,7 @@ class MyRobot(wpilib.IterativeRobot):
                 else:
                     self.auto = 1
             elif self.target == 2:
-                if self.ourSwitch == "L":
+                if self.scale == "L":
                     self.auto = 10
                 else:
                     self.auto = 8
