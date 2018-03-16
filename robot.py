@@ -38,12 +38,12 @@ class MyRobot(wpilib.IterativeRobot):
         self.driveFactor = 0.5
 
         #This initializes the Encoders - left and right, attached to gearbox
-        self.EC1 = wpilib.Encoder(4,5)
-        self.EC2 = wpilib.Encoder(6,7)
+        self.EC1 = wpilib.Encoder(0,1)
+        self.EC2 = wpilib.Encoder(2,3)
         
         #Encoder for the elevator and shoulder
-        self.EC3 = wpilib.Encoder(6,7) #This sets the encoder for the elevator.
-        self.EC4 = wpilib.Encoder(8,9) #This sets the encoder for the arm.
+        self.EC3 = wpilib.Encoder(4,5) #This sets the encoder for the elevator.
+        self.EC4 = wpilib.Encoder(6,7) #This sets the encoder for the arm.
 
         #This sets the Pneumatics.
         self.leftGearShift = wpilib.Solenoid(5,0)
