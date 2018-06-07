@@ -2,6 +2,7 @@
 #!/usr/bin/en5v python3
 """
     This is a good foundation to build your robot code on
+Hello, Sandra and Melanie! June 7, 2018
 """
 import ctre
 import wpilib
